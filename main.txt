@@ -1,0 +1,39 @@
+// This Google App Script is in the demo: https://docs.google.com/spreadsheets/d/1zg7ChgtnYtKEWU2OBiRTsHz7Mvp--42XEj9ZmAl1ux8/edit#gid=0
+function OPENAIPROMPT(userPrompt) {
+  // Get the spreadsheet by its name
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('roles');
+  // Retrieve the API key from cell G2
+  const apiKey = sheet.getRange('G2').getValue();
+
+  const apiEndpoint = "https://api.openai.com/v1/chat/completions";
+
+  const payload = JSON.stringify({
+    model: "gpt-4-turbo", // change to your model of choice
+    messages: [{
+      role: "user",
+      content: userPrompt
+    }],
+    max_tokens: 150,
+    temperature: 0.7  // Optional: Adjust for creativity variance, default is 1
+  });
+
+  const options = {
+    method: 'post',
+    contentType: 'application/json',
+    payload: payload,
+    headers: {
+      Authorization: `Bearer ${apiKey}`
+    },
+    muteHttpExceptions: true
+  };
+
+  const response = UrlFetchApp.fetch(apiEndpoint, options);
+  const responseJson = JSON.parse(response.getContentText());
+
+  if (response.getResponseCode() == 200) {
+    return responseJson.choices[0].message.content.trim();
+  } else {
+    // Handle errors gracefully
+    return "Failed to generate text: " + (responseJson.error ? responseJson.error.message : "Unknown error");
+  }
+}
